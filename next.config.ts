@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
     CLIENT_EMAIL: process.env.CLIENT_EMAIL,
     STRAVA_ACCESS_TOKEN: process.env.STRAVA_ACCESS_TOKEN,
     STRAVA_REFRESH_TOKEN: process.env.STRAVA_REFRESH_TOKEN,
+    KV_URL: process.env.KV_URL,
+    KV_REST_API_READ_ONLY_TOKEN: process.env.KV_REST_API_READ_ONLY_TOKEN,
+    REDIS_URL: process.env.REDIS_URL,
+    KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN,
+    KV_REST_API_URL: process.env.KV_REST_API_URL,
   },
 };
 

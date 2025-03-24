@@ -22,11 +22,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
-const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://bbyo-utils-server-53df6626a01b.herokuapp.com"
-    : "http://localhost:8080";
-
 export default function AssignmentsUtil() {
   const { toast } = useToast();
 
@@ -44,6 +39,7 @@ export default function AssignmentsUtil() {
   const [setAll, setSetAll] = useState(0);
   const [data, setData] = useState<Assignment[]>([]);
   const [simulations, setSimulations] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -112,6 +108,7 @@ export default function AssignmentsUtil() {
       });
 
       setAssignments([]);
+      setIsLoading(true);
 
       const button = document.getElementsByName(
         "processCSV"
@@ -125,13 +122,10 @@ export default function AssignmentsUtil() {
       formData.append("numSessions", numSessions.toString());
       formData.append("simulations", simulations.toString());
 
-      const res = await fetch(
-        API_URL + "/api/assignments/generate-assignments",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch("/api/assignments", {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await res.json();
 
@@ -143,6 +137,7 @@ export default function AssignmentsUtil() {
         });
 
         button.disabled = false;
+        setIsLoading(false);
         return;
       }
 
@@ -152,6 +147,7 @@ export default function AssignmentsUtil() {
           title: "Error",
           description: data.message,
         });
+        setIsLoading(false);
         return;
       }
 
@@ -214,13 +210,15 @@ export default function AssignmentsUtil() {
       });
 
       button.disabled = false;
+      setIsLoading(false);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       toast({
         variant: "destructive",
         title: "Error",
         description: "There was an error processing the CSV.",
       });
+      setIsLoading(false);
     }
   };
 
@@ -293,10 +291,13 @@ export default function AssignmentsUtil() {
             </Button>
             <div className="grid w-full items-center gap-1.5">
               <Input
-                accept=".csv"
                 id="csvfile"
                 type="file"
+                accept=".csv"
                 onChange={handleFileChange}
+                placeholder="Upload CSV"
+                className="max-w-lg"
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -373,21 +374,23 @@ export default function AssignmentsUtil() {
                     onChange={(e) => setSimulations(+e.target.value)}
                   />
                   <Popover>
-                    <PopoverTrigger>
-                      <HoverCard>
-                        <HoverCardTrigger>
-                          <Button className="w-28" variant="outline">
-                            Override
-                          </Button>
-                        </HoverCardTrigger>
-                        <HoverCardContent>
-                          <p className="text-sm text-gray-600">
-                            Override the total number of spots per program. The
-                            sum of the number of spots must be greater than the
-                            total number of participants.
-                          </p>
-                        </HoverCardContent>
-                      </HoverCard>
+                    <PopoverTrigger asChild>
+                      <div>
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <Button className="w-28" variant="outline">
+                              Override
+                            </Button>
+                          </HoverCardTrigger>
+                          <HoverCardContent>
+                            <p className="text-sm text-gray-600">
+                              Override the total number of spots per program.
+                              The sum of the number of spots must be greater
+                              than the total number of participants.
+                            </p>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </div>
                     </PopoverTrigger>
                     <PopoverContent>
                       <div className="flex items-center gap-2 p-1">
@@ -449,17 +452,24 @@ export default function AssignmentsUtil() {
                       </Button>
                     </PopoverContent>
                   </Popover>
+                  <Button
+                    onClick={processCSV}
+                    variant="default"
+                    className="space-x-2 px-6"
+                    name="processCSV"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span>Processing...</span>
+                    ) : (
+                      <>
+                        <BarChartIcon className="h-5 w-5" />
+                        <span>Process CSV</span>
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
-              <Button
-                name="processCSV"
-                className="w-full bg-blue-500 text-white mt-4"
-                variant="default"
-                onClick={processCSV}
-              >
-                Generate for {csvFile?.name}
-                <BarChartIcon className="ml-2 h-4 w-4" />
-              </Button>
             </div>
           )}
 

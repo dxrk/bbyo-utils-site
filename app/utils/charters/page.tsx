@@ -54,11 +54,6 @@ if (typeof window !== "undefined") {
   });
 }
 
-const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://bbyo-utils-server-53df6626a01b.herokuapp.com"
-    : "http://localhost:8080";
-
 export default function ChartersUtil() {
   const [form, setForm] = useState({
     charterType: "Permanent",
@@ -74,6 +69,11 @@ export default function ChartersUtil() {
   const [showPreview, setShowPreview] = useState(false);
 
   const [charterImage, setCharterImage] = useState("");
+  const [charterImageId, setCharterImageId] = useState<string>("");
+  const [charterFilename, setCharterFilename] = useState<string>("");
+
+  // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
 
@@ -86,6 +86,14 @@ export default function ChartersUtil() {
   const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
     setForm((prevForm) => ({ ...prevForm, [name]: value }));
+  };
+
+  const handleOverrideChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setOverride((prevOverride) => ({
+      ...prevOverride,
+      [name]: value === "" ? NaN : parseInt(value),
+    }));
   };
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
@@ -117,15 +125,36 @@ export default function ChartersUtil() {
       description: `Generating ${order} ${charter} charter for ${chapter}...`,
     });
 
+    // Set loading state
+    setIsLoading(true);
+
     // block button from being pressed
     const button = document.getElementsByName(
       "generate"
     )[0] as HTMLButtonElement;
     button.disabled = true;
 
+    // Filter out NaN values from override
+    const filteredOverride = override
+      ? {
+          ...(isNaN(override.columns) ? {} : { columns: override.columns }),
+          ...(isNaN(override.yPosition)
+            ? {}
+            : { yPosition: override.yPosition }),
+          ...(isNaN(override.fontSize) ? {} : { fontSize: override.fontSize }),
+        }
+      : undefined;
+
+    // Only send override if it has properties
+    const finalOverride =
+      filteredOverride && Object.keys(filteredOverride).length > 0
+        ? filteredOverride
+        : undefined;
+
     const charterType = `${order} ${charter} Charter Template`;
     try {
-      const res = await fetch(API_URL + "/api/charters/generate-charter", {
+      // Use the new Next.js API endpoint instead of the Express server
+      const res = await fetch("/api/charters/generate-charter", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,12 +165,12 @@ export default function ChartersUtil() {
           community,
           charter: charterType,
           date,
-          override,
+          override: finalOverride,
         }),
       });
 
       if (res.status !== 200) {
-        if (res.status === 204) {
+        if (res.status === 400) {
           toast({
             variant: "destructive",
             title: "Error",
@@ -160,14 +189,18 @@ export default function ChartersUtil() {
           description: "Your charter has been generated.",
         });
 
-        const image = await res.blob();
-        const url = URL.createObjectURL(image);
+        // Get the JSON response with imageId and filename
+        const { imageId, filename } = await res.json();
+        setCharterImageId(imageId);
+        setCharterFilename(filename);
 
-        // Convert the image to a PDF using html2pdf
-        const containerDiv = document.createElement("div");
-        const imgElement = document.createElement("img");
-        imgElement.src = url;
-        containerDiv.appendChild(imgElement);
+        // Now make a second request to get the actual image using the imageId
+        const imageResponse = await fetch(
+          `/api/charters/generate-charter?id=${imageId}&filename=${filename}`
+        );
+        const image = await imageResponse.blob();
+
+        const url = URL.createObjectURL(image);
 
         setShowPreview(true);
         setCharterImage(url);
@@ -179,9 +212,11 @@ export default function ChartersUtil() {
         title: "Error",
         description: "There was an error generating your charter.",
       });
+    } finally {
+      // Reset loading state
+      setIsLoading(false);
+      button.disabled = false;
     }
-
-    button.disabled = false;
   }
 
   async function downloadPdf(charterType: string) {
@@ -218,6 +253,56 @@ export default function ChartersUtil() {
     }
   }
 
+  // Function to directly download the generated image
+  const downloadDirectImage = async () => {
+    if (!charterImageId || !charterFilename) {
+      toast({
+        variant: "destructive",
+        title: "Error!",
+        description: "No charter image available to download",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // Fetch the image using the stored ID and filename
+      const imageResponse = await fetch(
+        `/api/charters/generate-charter?id=${charterImageId}&filename=${charterFilename}`
+      );
+
+      if (!imageResponse.ok) {
+        throw new Error("Failed to retrieve charter image");
+      }
+
+      const imageBlob = await imageResponse.blob();
+
+      // Download the image
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(imageBlob);
+      link.download = charterFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        variant: "default",
+        title: "Charter Downloaded!",
+        description: "Your charter has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error("Error downloading charter:", error);
+      toast({
+        variant: "destructive",
+        title: "Error!",
+        description: "Failed to download charter. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="container mx-auto p-6">
       <Card>
@@ -252,21 +337,19 @@ export default function ChartersUtil() {
                   onValueChange={(value) =>
                     setForm({ ...form, charterType: value })
                   }
+                  className="flex flex-wrap gap-6"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Permanent" id="permanent-charter" />
-                    <Label htmlFor="permanent-charter">Permanent</Label>
+                    <RadioGroupItem value="Permanent" id="Permanent" />
+                    <Label htmlFor="Permanent">Permanent</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Temporary" id="temporary-charter" />
-                    <Label htmlFor="temporary-charter">Temporary</Label>
+                    <RadioGroupItem value="Temporary" id="Temporary" />
+                    <Label htmlFor="Temporary">Temporary</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value="Celebratory"
-                      id="celebratory-charter"
-                    />
-                    <Label htmlFor="celebratory-charter">Celebratory</Label>
+                    <RadioGroupItem value="Celebratory" id="Celebratory" />
+                    <Label htmlFor="Celebratory">Celebratory</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -274,46 +357,31 @@ export default function ChartersUtil() {
               <div>
                 <label
                   className="block text-sm font-medium text-gray-700 mb-2"
-                  htmlFor="charterType"
+                  htmlFor="order"
                 >
                   Order:
                 </label>
                 <RadioGroup
                   defaultValue="AZA"
                   onValueChange={(value) => setForm({ ...form, order: value })}
+                  className="flex flex-wrap gap-6"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="AZA" id="aza-option" />
-                    <Label htmlFor="aza-option">AZA</Label>
+                    <RadioGroupItem value="AZA" id="AZA" />
+                    <Label htmlFor="AZA">AZA</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="BBG" id="bbg-option" />
-                    <Label htmlFor="bbg-option">BBG</Label>
+                    <RadioGroupItem value="BBG" id="BBG" />
+                    <Label htmlFor="BBG">BBG</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="BBYO" id="bbyo-option" />
-                    <Label htmlFor="bbyo-option">BBYO</Label>
+                    <RadioGroupItem value="BBYO" id="BBYO" />
+                    <Label htmlFor="BBYO">BBYO</Label>
                   </div>
                 </RadioGroup>
               </div>
 
-              <div>
-                <label
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                  htmlFor="names"
-                >
-                  Names:
-                </label>
-                <textarea
-                  className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                  id="names"
-                  placeholder="Enter names..."
-                  rows={15}
-                  name="names"
-                  value={form.names}
-                  onChange={handleChange}
-                />
-              </div>
+              <Separator />
 
               <div>
                 <label
@@ -322,12 +390,10 @@ export default function ChartersUtil() {
                 >
                   Chapter Name:
                 </label>
-                <input
-                  className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
+                <Input
                   id="chapterName"
-                  placeholder="Enter chapter name..."
-                  type="text"
                   name="chapterName"
+                  placeholder="Chapter Name"
                   value={form.chapterName}
                   onChange={handleChange}
                 />
@@ -338,155 +404,204 @@ export default function ChartersUtil() {
                   className="block text-sm font-medium text-gray-700 mb-2"
                   htmlFor="communityName"
                 >
-                  Community Name:
+                  Community/Council Name:
                 </label>
-                <input
-                  className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
+                <Input
                   id="communityName"
-                  placeholder="Enter community name..."
-                  type="text"
                   name="communityName"
+                  placeholder="Community or Council Name"
                   value={form.communityName}
                   onChange={handleChange}
                 />
               </div>
 
-              <div>
-                <label
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                  htmlFor="communityName"
-                >
-                  Choose a Date:
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="date">Charter Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
+                        "w-full justify-start text-left font-normal",
                         !date && "text-muted-foreground"
                       )}
                     >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
                       {date ? format(date, "PPP") : <span>Pick a date</span>}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="p-4">
+                  <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
                       selected={date}
-                      onSelect={(date) => {
-                        setDate(date);
-                      }}
-                      disabled={(date) => date < new Date("1900-01-01")}
+                      onSelect={setDate}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <Button name="generate" className="w-full" type="submit">
-                Generate
-              </Button>
+              {!form.charterType.includes("Temporary") && (
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                    htmlFor="names"
+                  >
+                    Charter Names: (One per line)
+                  </label>
+                  <textarea
+                    id="names"
+                    name="names"
+                    rows={10}
+                    className="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border border-gray-300 rounded-md p-2"
+                    placeholder="Enter names, one per line"
+                    value={form.names}
+                    onChange={handleChange}
+                  />
+                </div>
+              )}
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  name="generate"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Generating..." : "Generate Charter"}
+                </Button>
+              </div>
             </div>
           </form>
 
           <Dialog open={showPreview} onOpenChange={setShowPreview}>
-            <DialogContent>
+            <DialogContent className="max-w-5xl">
               <DialogHeader>
-                <DialogTitle className="text-center">
-                  Charter Preview
+                <DialogTitle>
+                  {form.chapterName} {form.charterType} Charter
                 </DialogTitle>
               </DialogHeader>
-              <Separator className="my-4" />
-              <p className="text-sm text-gray-500 text-center p-2">
-                Add microadjustments to the spacing on the charter before
-                downloading. Y-Position correlates to the vertical position of
-                the names. Columns correlates to the number of columns for the
-                names. Font Size correlates to the size of the names.
-              </p>
-              <div className="flex space-x-4 justify-center items-center">
-                <Label htmlFor="y-position">Y-Position</Label>
-                <Input
-                  id="y-position"
-                  type="number"
-                  min={-1000}
-                  max={1000}
-                  defaultValue={0}
-                  className="w-20"
-                  onChange={(e) => {
-                    setOverride((prev) => ({
-                      ...prev,
-                      yPosition: parseFloat(e.target.value),
-                    }));
-                  }}
-                />
-
-                <Label htmlFor="columns">Columns</Label>
-                <Input
-                  id="columns"
-                  type="number"
-                  min={1}
-                  max={10}
-                  className="w-20"
-                  defaultValue={override.columns}
-                  onChange={(e) => {
-                    setOverride((prev) => ({
-                      ...prev,
-                      columns: parseInt(e.target.value),
-                    }));
-                  }}
-                />
-
-                <Label htmlFor="font-size">Font Size</Label>
-                <Input
-                  id="font-size"
-                  type="number"
-                  min={1}
-                  max={100}
-                  className="w-20"
-                  defaultValue={override.fontSize}
-                  onChange={(e) => {
-                    setOverride((prev) => ({
-                      ...prev,
-                      fontSize: parseFloat(e.target.value),
-                    }));
-                  }}
-                />
+              <div className="overflow-auto max-h-[70vh]">
+                <div className="flex justify-center">
+                  <Image
+                    src={charterImage}
+                    alt="Generated Charter"
+                    width={800}
+                    height={600}
+                    className="max-w-full h-auto"
+                    unoptimized
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-center p-3">
-                <Image
-                  src={charterImage}
-                  alt="Charter Preview"
-                  width={330}
-                  height={510}
-                />
-              </div>
-              <Separator className="my-4" />
-              <div className="space-y-2">
+              {/* Advanced options section inside popup - more compact layout */}
+              <div className="p-2 border rounded-md mt-2 bg-gray-50">
+                <div className="flex justify-between items-center mb-1">
+                  <h3 className="text-sm font-medium">Advanced Adjustments</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Make adjustments and click &ldquo;Regenerate&rdquo;
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="columns" className="text-xs">
+                      Columns
+                    </Label>
+                    <Input
+                      id="columns"
+                      name="columns"
+                      type="number"
+                      placeholder="Auto"
+                      value={isNaN(override.columns) ? "" : override.columns}
+                      onChange={handleOverrideChange}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="yPosition" className="text-xs">
+                      Y Position
+                    </Label>
+                    <Input
+                      id="yPosition"
+                      name="yPosition"
+                      type="number"
+                      placeholder="0"
+                      value={
+                        isNaN(override.yPosition) ? "" : override.yPosition
+                      }
+                      onChange={handleOverrideChange}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="fontSize" className="text-xs">
+                      Font Size
+                    </Label>
+                    <Input
+                      id="fontSize"
+                      name="fontSize"
+                      type="number"
+                      placeholder="Auto"
+                      value={isNaN(override.fontSize) ? "" : override.fontSize}
+                      onChange={handleOverrideChange}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </div>
+
                 <Button
-                  className="w-full"
-                  onClick={() =>
-                    generateCharter(
-                      form.order,
-                      form.names,
-                      form.communityName,
-                      form.charterType,
-                      form.chapterName,
-                      date,
-                      override
-                    )
-                  }
+                  type="button"
+                  className="w-full mt-2 h-8 text-sm"
+                  disabled={isLoading}
+                  onClick={() => {
+                    setShowPreview(false);
+                    // Small delay to allow dialog to close before regenerating
+                    setTimeout(() => {
+                      const {
+                        order,
+                        names,
+                        communityName,
+                        charterType,
+                        chapterName,
+                      } = form;
+                      generateCharter(
+                        order,
+                        names,
+                        communityName,
+                        charterType,
+                        chapterName,
+                        date,
+                        override
+                      );
+                    }, 100);
+                  }}
                 >
-                  Regenerate
+                  {isLoading
+                    ? "Regenerating..."
+                    : "Regenerate with Adjustments"}
+                </Button>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPreview(false);
+                  }}
+                >
+                  Close
+                </Button>
+                <Button variant="outline" onClick={downloadDirectImage}>
+                  Download PNG
                 </Button>
                 <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => downloadPdf(form.charterType)}
+                  onClick={() =>
+                    downloadPdf(`${form.order} ${form.charterType}`)
+                  }
                 >
-                  Download
+                  Download PDF
                 </Button>
               </div>
             </DialogContent>

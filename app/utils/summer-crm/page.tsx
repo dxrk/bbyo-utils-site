@@ -10,11 +10,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { JSX, SVGProps, useEffect, useState } from "react";
 
-const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://bbyo-utils-server-53df6626a01b.herokuapp.com"
-    : "http://localhost:8080";
-
 const AIRTABLE_URL =
   "https://airtable.com/app6PtSPpN3yP3cM5/tblcW7m6RHG1r61rx/viwD23Jdyb03kwNwn";
 
@@ -87,138 +82,148 @@ export default function CRMUtil() {
           title: "Error",
           description: "Please upload a CSV file.",
         });
+        return;
       }
 
       toast({
         variant: "default",
         title: "Processing CSV...",
-        description: "Starting process, loading records (Might take a minute).",
+        description: "Starting process, loading CSV file.",
       });
 
-      const button = document.getElementsByName(
-        "processCSV"
-      )[0] as HTMLButtonElement;
-      button.disabled = true;
-
       const formData = new FormData();
-      formData.append("csv", csvFile as Blob);
+      formData.append("csv", csvFile);
 
-      await fetch(API_URL + "/api/summer-crm/process-csv", {
+      const response = await fetch("/api/summer-crm/process-csv", {
         method: "POST",
         body: formData,
       });
 
-      let result = {
-        totalRecords: 0,
-        totalChecked: 0,
-        totalChanges: 0,
-        finishedChecking: false,
-        updatedRecords: [],
-        newRecords: [],
-      };
+      if (!response.ok) {
+        throw new Error("Server error processing CSV");
+      }
 
-      do {
+      const intervalId = setInterval(async () => {
         try {
-          const checkRes = await fetch(
-            API_URL + "/api/summer-crm/check-progress",
+          const progressResponse = await fetch(
+            "/api/summer-crm/check-progress",
             {
               method: "POST",
             }
           );
 
-          result = await checkRes.json();
+          if (!progressResponse.ok) {
+            clearInterval(intervalId);
+            throw new Error("Error checking progress");
+          }
+
+          const result = await progressResponse.json();
 
           setProgress(
             Math.floor((result.totalChecked / result.totalRecords) * 100)
           );
 
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        } catch {
-          continue;
+          if (result.finishedChecking) {
+            clearInterval(intervalId);
+            setShowPushChanges(true);
+
+            localStorage.setItem(
+              "records",
+              JSON.stringify({
+                updatedRecords: result.updatedRecords,
+                newRecords: result.newRecords,
+              })
+            );
+
+            setRecords({
+              updatedRecords: result.updatedRecords,
+              newRecords: result.newRecords,
+            });
+
+            toast({
+              variant: "default",
+              title: "CSV Processed!",
+              description: `Updated Records: ${result.updatedRecords.length}, New Records: ${result.newRecords.length}`,
+            });
+
+            const header = "Link To Profile,ID,Updated Fields";
+
+            const updatedRecords = result.updatedRecords.map(
+              (record: AirtableRecord) => {
+                const updatedFields = Object.keys(record.fields)
+                  .filter((key) => key.toLowerCase() !== "updated?")
+                  .map((key) => `${key}: ${record.fields[key]}`)
+                  .join(", ");
+                return `${AIRTABLE_URL}/${record.id},${record.id},${updatedFields}`;
+              }
+            );
+
+            const updatedRecordsCSV = [header, ...updatedRecords].join("\n");
+
+            setDownloadUpdatedReport(
+              new File([updatedRecordsCSV], "updatedRecords.csv")
+            );
+
+            const newRecordsHeader =
+              "myBBYO ID,First Name,Last Name,Graduation Year,Phone,Email,Community,Chapter,Membership Join Date Import,Order,Leadership History,Total Events Attended,IC Events Attended,Regional Conventions Attended,IC/Summer Registration Launch Night,Summer Experience History,Parent 1 MyBBYO ID,Parent 1 Name,Program Registered For,ZIP,Address Line 1,City,State,Parent 2 MyBBYO ID,Parent 2 Name,Instagram Handle,Do Not Text,Address Line 2";
+
+            const newRecords = result.newRecords.map(
+              (record: AirtableRecord) => {
+                const fields = [
+                  "myBBYO ID",
+                  "First Name",
+                  "Last Name",
+                  "Graduation Year",
+                  "Phone",
+                  "Email",
+                  "Community",
+                  "Chapter",
+                  "Membership Join Date Import",
+                  "Order",
+                  "Leadership History",
+                  "Total Events Attended",
+                  "IC Events Attended",
+                  "Regional Conventions Attended",
+                  "IC/Summer Registration Launch Night",
+                  "Summer Experience History",
+                  "Parent 1 MyBBYO ID",
+                  "Parent 1 Name",
+                  "Program Registered For",
+                  "ZIP",
+                  "Address Line 1",
+                  "City",
+                  "State",
+                  "Parent 2 MyBBYO ID",
+                  "Parent 2 Name",
+                  "Instagram Handle",
+                  "Do Not Text",
+                  "Address Line 2",
+                ];
+
+                return fields
+                  .map((field) => record.fields[field] || "")
+                  .join(",");
+              }
+            );
+
+            const newRecordsCSV = [newRecordsHeader, ...newRecords].join("\n");
+
+            setDownloadNewRecordsReport(
+              new File([newRecordsCSV], "newRecords.csv")
+            );
+          }
+        } catch (error) {
+          clearInterval(intervalId);
+          console.error("Error checking progress:", error);
         }
-      } while (!result.finishedChecking);
-
-      setProgress(100);
-      setTotalRecords(result.totalChanges);
-      setRecords({
-        updatedRecords: result.updatedRecords,
-        newRecords: result.newRecords,
-      });
-      setShowPushChanges(true);
-      toast({
-        variant: "default",
-        title: "Airtable has been processed!",
-        description: `Updated Records: ${result.updatedRecords.length} New Records: ${result.newRecords.length}`,
-      });
-
-      localStorage.setItem("records", JSON.stringify(result));
-
-      const header = "Link To Profile,ID,Updated Fields";
-
-      const updatedRecords = result.updatedRecords.map(
-        (record: AirtableRecord) => {
-          const updatedFields = Object.keys(record.fields)
-            .filter((key) => key.toLowerCase() !== "updated?")
-            .map((key) => `${key}: ${record.fields[key]}`)
-            .join(", ");
-          return `${AIRTABLE_URL}/${record.id},${record.id},${updatedFields}`;
-        }
-      );
-
-      const updatedRecordsCSV = [header, ...updatedRecords].join("\n");
-
-      setDownloadUpdatedReport(
-        new File([updatedRecordsCSV], "updatedRecords.csv")
-      );
-
-      const newRecordsHeader =
-        "myBBYO ID,First Name,Last Name,Graduation Year,Phone,Email,Community,Chapter,Membership Join Date Import,Order,Leadership History,Total Events Attended,IC Events Attended,Regional Conventions Attended,IC/Summer Registration Launch Night,Summer Experience History,Parent 1 MyBBYO ID,Parent 1 Name,Program Registered For,ZIP,Address Line 1,City,State,Parent 2 MyBBYO ID,Parent 2 Name,Instagram Handle,Do Not Text,Address Line 2";
-
-      // All records won't have every field, so we need to match the header. Leave empty if not present
-      const newRecords = result.newRecords.map((record: AirtableRecord) => {
-        const fields = [
-          "myBBYO ID",
-          "First Name",
-          "Last Name",
-          "Graduation Year",
-          "Phone",
-          "Email",
-          "Community",
-          "Chapter",
-          "Membership Join Date Import",
-          "Order",
-          "Leadership History",
-          "Total Events Attended",
-          "IC Events Attended",
-          "Regional Conventions Attended",
-          "IC/Summer Registration Launch Night",
-          "Summer Experience History",
-          "Parent 1 MyBBYO ID",
-          "Parent 1 Name",
-          "Program Registered For",
-          "ZIP",
-          "Address Line 1",
-          "City",
-          "State",
-          "Parent 2 MyBBYO ID",
-          "Parent 2 Name",
-          "Instagram Handle",
-          "Do Not Text",
-          "Address Line 2",
-        ];
-
-        return fields.map((field) => record.fields[field] || "").join(",");
-      });
-
-      const newRecordsCSV = [newRecordsHeader, ...newRecords].join("\n");
-
-      setDownloadNewRecordsReport(new File([newRecordsCSV], "newRecords.csv"));
-    } catch {
+      }, 2000);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
         description: "There was an error processing the CSV.",
       });
+      console.error("Error processing CSV:", error);
     }
   };
 
@@ -247,7 +252,7 @@ export default function CRMUtil() {
             updated: true,
           };
 
-          await fetch(API_URL + "/api/summer-crm/update-airtable", {
+          await fetch("/api/summer-crm/update-airtable", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -278,7 +283,7 @@ export default function CRMUtil() {
             new: true,
           };
 
-          await fetch(API_URL + "/api/summer-crm/update-airtable", {
+          await fetch("/api/summer-crm/update-airtable", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -309,7 +314,7 @@ export default function CRMUtil() {
       localStorage.clear();
       setShowPushChanges(false);
 
-      await fetch(API_URL + "/api/summer-crm/clear-storage", {
+      await fetch("/api/summer-crm/clear-storage", {
         method: "POST",
       });
     } catch (e) {
@@ -331,14 +336,14 @@ export default function CRMUtil() {
         description: "Starting process, clearing records.",
       });
 
-      await fetch(API_URL + "/api/summer-crm/clear-storage", {
+      await fetch("/api/summer-crm/clear-storage", {
         method: "POST",
       });
 
       localStorage.clear();
 
       setRecords({ updatedRecords: [], newRecords: [] });
-      setShowPushChanges(false); // Remove this line if not needed
+      setShowPushChanges(false);
       setProgress(0);
       setAirTableProgress(0);
 
