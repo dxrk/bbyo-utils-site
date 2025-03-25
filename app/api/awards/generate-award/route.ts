@@ -14,8 +14,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get the base URL from the request headers
+    const baseUrl = request.headers.get("origin") || "";
+
     // Generate the SVG
-    const svg = generateSvg(name, community, chapter, award);
+    const svg = generateSvg(name, community, chapter, award, baseUrl);
 
     // Convert SVG to PNG buffer
     const buffer = await generateBuffer(svg, award);
