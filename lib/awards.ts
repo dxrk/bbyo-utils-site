@@ -140,7 +140,7 @@ export function generateSvg(
   <defs>
     <style>
       ${getFontFaceStyle()}
-      .awardName { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: ${awardFont}px;}
+      .awardName { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: ${awardFont}px; }
       .description { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
       .name { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 110px; }
       .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 90px; }
