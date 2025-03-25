@@ -1,31 +1,40 @@
-export function getFontFaceStyle(baseUrl: string = ""): string {
-  // Use the baseUrl if provided (server-side), otherwise use relative path (client-side)
-  const fontPath = baseUrl ? `${baseUrl}/fonts` : "/fonts";
+import fs from "fs";
+import path from "path";
+
+export function getFontFaceStyle(): string {
+  // Read fonts directly from filesystem
+  const fontsDir = path.join(process.cwd(), "lib", "fonts");
+  const regularFont = fs.readFileSync(
+    path.join(fontsDir, "Graphik-Regular.woff2"),
+    "base64"
+  );
+  const lightFont = fs.readFileSync(
+    path.join(fontsDir, "Graphik-Light.woff2"),
+    "base64"
+  );
+  const mediumFont = fs.readFileSync(
+    path.join(fontsDir, "Graphik-Medium.woff2"),
+    "base64"
+  );
 
   return `
     @font-face {
       font-family: 'Graphik';
-      src: url('${fontPath}/Graphik-Regular.woff2') format('woff2'),
-           url('${fontPath}/Graphik-Regular.woff') format('woff'),
-           url('${fontPath}/Graphik-Regular.ttf') format('truetype');
+      src: url(data:font/woff2;base64,${regularFont}) format('woff2');
       font-weight: 400;
       font-style: normal;
       font-display: swap;
     }
     @font-face {
       font-family: 'Graphik';
-      src: url('${fontPath}/Graphik-Light.woff2') format('woff2'),
-           url('${fontPath}/Graphik-Light.woff') format('woff'),
-           url('${fontPath}/Graphik-Light.ttf') format('truetype');
+      src: url(data:font/woff2;base64,${lightFont}) format('woff2');
       font-weight: 300;
       font-style: normal;
       font-display: swap;
     }
     @font-face {
       font-family: 'Graphik';
-      src: url('${fontPath}/Graphik-Medium.woff2') format('woff2'),
-           url('${fontPath}/Graphik-Medium.woff') format('woff'),
-           url('${fontPath}/Graphik-Medium.ttf') format('truetype');
+      src: url(data:font/woff2;base64,${mediumFont}) format('woff2');
       font-weight: 500;
       font-style: normal;
       font-display: swap;

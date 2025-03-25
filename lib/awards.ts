@@ -129,8 +129,7 @@ export function generateSvg(
   name: string,
   community: string,
   chapter: string,
-  award: string,
-  baseUrl: string = ""
+  award: string
 ): string {
   let awardFont = 130;
   if (award.length > 45) awardFont = 110;
@@ -140,7 +139,7 @@ export function generateSvg(
   <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
-      ${getFontFaceStyle(baseUrl)}
+      ${getFontFaceStyle()}
       .awardName { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: ${awardFont}px;}
       .description { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
       .name { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 110px; }

@@ -222,8 +222,7 @@ export async function generateSvg(
   community: string,
   charter: string,
   date: string,
-  override?: OverrideOptions,
-  baseUrl?: string
+  override?: OverrideOptions
 ): Promise<string> {
   const imageDimensions = await getImageDimensions(charter);
   let svgText: string;
@@ -245,7 +244,7 @@ export async function generateSvg(
     }" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <style>
-        ${getFontFaceStyle(baseUrl)}
+        ${getFontFaceStyle()}
         .memberList { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: ${finalFontSize}px; }
         .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 115px; }
         .community { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 80px; }
@@ -287,7 +286,7 @@ export async function generateSvg(
     }" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <style>
-        ${getFontFaceStyle(baseUrl)}
+        ${getFontFaceStyle()}
         .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 115px; }
         .community { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 80px; }
         .date { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
