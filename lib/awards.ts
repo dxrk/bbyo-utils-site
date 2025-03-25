@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import path from "path";
 import fs from "fs";
+import { getFontFaceStyle } from "./font-utils";
 
 // Define award info type
 type AwardInfo = {
@@ -136,13 +137,16 @@ export function generateSvg(
 
   let svgText = `
   <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    .awardName { fill: black; font-weight: 500; font-family: 'Graphik'; font-size: ${awardFont}px;}
-    .description { fill: black; font-weight: light; font-family: 'Graphik'; font-size: 50px; }
-    .name { fill: black; font-weight: bold; font-family: 'Graphik'; font-size:110px; }
-    .chapter { fill: black; font-weight: bold; font-family: 'Graphik'; font-size: 90px; }
-    .date { fill: black; font-weight: light; font-family: 'Graphik'; font-size: 50px; }
-  </style>`;
+  <defs>
+    <style>
+      ${getFontFaceStyle()}
+      .awardName { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: ${awardFont}px;}
+      .description { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
+      .name { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 110px; }
+      .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 90px; }
+      .date { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
+    </style>
+  </defs>`;
 
   const currentDate = new Date();
   const formattedDate = formatJewishDate(currentDate);

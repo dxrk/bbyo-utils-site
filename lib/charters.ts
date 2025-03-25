@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import path from "path";
 import fs from "fs";
+import { getFontFaceStyle } from "./font-utils";
 
 // Define template info type
 type TemplateAlignment = {
@@ -238,13 +239,18 @@ export async function generateSvg(
     const finalFontSize = override?.fontSize || fontSize;
 
     svgText = `
-    <svg width="${imageDimensions.width}" height="${imageDimensions.height}" xmlns="http://www.w3.org/2000/svg">
-    <style>
-      .memberList { fill: black; font-weight: light; font-family: 'Graphik'; font-size: ${finalFontSize}px; }
-      .chapter { fill: black; font-weight: bold; font-family: 'Graphik'; font-size: 115px; }
-      .community { fill: black; font-weight: light; font-family: 'Graphik'; font-size:80px; }
-      .date { fill: black; font-weight: light; font-family: 'Graphik'; font-size: 50px; }
-    </style>`;
+    <svg width="${imageDimensions.width}" height="${
+      imageDimensions.height
+    }" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <style>
+        ${getFontFaceStyle()}
+        .memberList { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: ${finalFontSize}px; }
+        .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 115px; }
+        .community { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 80px; }
+        .date { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
+      </style>
+    </defs>`;
 
     let spacing;
     if (finalFontSize === 40) {
