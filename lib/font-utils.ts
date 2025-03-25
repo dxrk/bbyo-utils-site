@@ -1,33 +1,28 @@
-import fs from "fs";
-import path from "path";
-
 export function getFontFaceStyle(): string {
-  const fontPath = path.join(process.cwd(), "public", "fonts");
-
   return `
     @font-face {
       font-family: 'Graphik';
-      src: url('data:font/woff2;base64,${fs
-        .readFileSync(path.join(fontPath, "Graphik-Regular.woff"))
-        .toString("base64")}') format('woff2');
+      src: url('/fonts/Graphik-Regular.woff2') format('woff2'),
+           url('/fonts/Graphik-Regular.woff') format('woff'),
+           url('/fonts/Graphik-Regular.ttf') format('truetype');
       font-weight: 400;
       font-style: normal;
       font-display: swap;
     }
     @font-face {
       font-family: 'Graphik';
-      src: url('data:font/woff2;base64,${fs
-        .readFileSync(path.join(fontPath, "Graphik-Light.woff"))
-        .toString("base64")}') format('woff2');
+      src: url('/fonts/Graphik-Light.woff2') format('woff2'),
+           url('/fonts/Graphik-Light.woff') format('woff'),
+           url('/fonts/Graphik-Light.ttf') format('truetype');
       font-weight: 300;
       font-style: normal;
       font-display: swap;
     }
     @font-face {
       font-family: 'Graphik';
-      src: url('data:font/woff2;base64,${fs
-        .readFileSync(path.join(fontPath, "Graphik-Medium.woff"))
-        .toString("base64")}') format('woff2');
+      src: url('/fonts/Graphik-Medium.woff2') format('woff2'),
+           url('/fonts/Graphik-Medium.woff') format('woff'),
+           url('/fonts/Graphik-Medium.ttf') format('truetype');
       font-weight: 500;
       font-style: normal;
       font-display: swap;
