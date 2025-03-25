@@ -1,5 +1,5 @@
 export function getFontFaceStyle(baseUrl: string = ""): string {
-  // If baseUrl is provided, it's server-side, otherwise it's client-side
+  // Use the baseUrl if provided (server-side), otherwise use relative path (client-side)
   const fontPath = baseUrl ? `${baseUrl}/fonts` : "/fonts";
 
   return `
