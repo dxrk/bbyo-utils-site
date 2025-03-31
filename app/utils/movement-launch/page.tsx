@@ -4,9 +4,6 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSheetData } from "./gs-action";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 interface LaunchItemProps {
   header?: string;
@@ -119,84 +116,55 @@ export default function MovementLaunch() {
   }, []);
 
   return (
-    <main className="container mx-auto p-6">
-      <Card>
-        <CardHeader className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Image
-                src="/bbyo-logo.png"
-                alt="BBYO Logo"
-                width={40}
-                height={40}
-              />
-              <h2 className="text-2xl font-bold">Movement Launch Totals</h2>
-            </div>
-            <Link href="/utils">
-              <Button variant="outline">Back to Utilities</Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 space-y-8">
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-4 text-cyan-300">IC</h3>
-              <LaunchItem
-                footer="Delegates"
-                value={data.delegates}
-                color="bg-cyan-300"
-              />
-            </div>
+    <div className="bg-blue-700 text-white p-8 font-sans min-h-screen">
+      <div className="flex justify-between items-start mb-16">
+        <h1 className="text-4xl font-bold">MOVEMENT LAUNCH TOTALS</h1>
+        <div className="flex items-center space-x-2">
+          <Image
+            src={"/bbyo-100.png"}
+            width={180}
+            height={180}
+            alt="BBYO Logo"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-4 mb-12">
+        <div>
+          <h2 className="text-3xl text-cyan-300 font-bold mb-4">IC</h2>
+          <LaunchItem
+            footer="Delegates"
+            value={data.delegates}
+            color="bg-cyan-300"
+          />
+        </div>
 
-            <div>
-              <h3 className="text-xl font-semibold mb-4 text-green-400">
-                LEADERSHIP
-              </h3>
-              <LaunchItem
-                footer="Awards"
-                value={data.awards}
-                color="bg-green-400"
-              />
-            </div>
-            <div className="mt-[52px]">
-              <LaunchItem footer="ILN" value={data.iln} color="bg-green-400" />
-            </div>
+        <div>
+          <h2 className="text-3xl text-green-400 font-bold mb-4">LEADERSHIP</h2>
+          <LaunchItem
+            footer="Awards"
+            value={data.awards}
+            color="bg-green-400"
+          />
+        </div>
+        <div className="mt-[52px]">
+          <LaunchItem footer="ILN" value={data.iln} color="bg-green-400" />
+        </div>
 
-            <div>
-              <h3 className="text-xl font-semibold mb-4 text-red-400">ISF</h3>
-              <LaunchItem footer="Total" value={data.isf} color="bg-red-500" />
-            </div>
-          </div>
+        <div>
+          <h2 className="text-3xl text-red-400 font-bold mb-4">ISF</h2>
+          <LaunchItem footer="Total" value={data.isf} color="bg-red-500" />
+        </div>
+      </div>
 
-          <div>
-            <h3 className="text-xl font-semibold mb-4 text-yellow-300">
-              SUMMER EXPERIENCES
-            </h3>
-            <div className="grid grid-cols-4 gap-4">
-              <LaunchItem
-                footer="CLTC"
-                value={data.cltc}
-                color="bg-yellow-300"
-              />
-              <LaunchItem
-                footer="ILTC"
-                value={data.iltc}
-                color="bg-yellow-300"
-              />
-              <LaunchItem
-                footer="Kallah"
-                value={data.kallah}
-                color="bg-yellow-300"
-              />
-              <LaunchItem
-                footer="ILSI"
-                value={data.ilsi}
-                color="bg-yellow-300"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+      <h2 className="text-3xl text-yellow-300 font-bold mb-4">
+        SUMMER EXPERIENCES
+      </h2>
+      <div className="grid grid-cols-4 gap-4">
+        <LaunchItem footer="CLTC" value={data.cltc} color="bg-yellow-300" />
+        <LaunchItem footer="ILTC" value={data.iltc} color="bg-yellow-300" />
+        <LaunchItem footer="Kallah" value={data.kallah} color="bg-yellow-300" />
+        <LaunchItem footer="ILSI" value={data.ilsi} color="bg-yellow-300" />
+      </div>
+    </div>
   );
 }

@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
     REDIS_URL: process.env.REDIS_URL,
     KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN,
     KV_REST_API_URL: process.env.KV_REST_API_URL,
+    DEPRECATED_TOOLS_PASSWORD: process.env.DEPRECATED_TOOLS_PASSWORD,
   },
   // Ensure fonts are properly served
   async headers() {
