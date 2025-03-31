@@ -23,5 +23,9 @@ export function getFontFaceStyle(): string {
       font-style: normal;
       font-display: swap;
     }
+
+    body {
+      font-family: 'Graphik', sans-serif;
+    }
   `;
 }

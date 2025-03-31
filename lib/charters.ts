@@ -287,9 +287,9 @@ export async function generateSvg(
     <defs>
       <style>
         ${getFontFaceStyle()}
-        .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 115px; }
-        .community { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 80px; }
-        .date { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
+        .chapter { fill: black; font-weight: 500; font-family: 'Graphik'; font-size: 115px; }
+        .community { fill: black; font-weight: 300; font-family: 'Graphik'; font-size: 80px; }
+        .date { fill: black; font-weight: 300; font-family: 'Graphik'; font-size: 50px; }
       </style>
     </defs>`;
   }
