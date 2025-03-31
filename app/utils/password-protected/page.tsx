@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import Image from "next/image";
 
-export default function DeprecatedPassword() {
+function PasswordForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -87,5 +87,13 @@ export default function DeprecatedPassword() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function DeprecatedPassword() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PasswordForm />
+    </Suspense>
   );
 }
