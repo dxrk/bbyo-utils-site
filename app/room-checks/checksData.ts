@@ -11,7 +11,12 @@ export const checksData = [
   },
   {
     name: "NRE Regional Convention 2025",
-    route: "nre",
+    route: "nre/rc-2025",
+    deprecated: true,
+  },
+  {
+    name: "NRE: DC Council Convention 2025",
+    route: "nre/dc-2025",
     deprecated: true,
   },
 ];

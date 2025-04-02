@@ -27,7 +27,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-const ExecSchema = z.object({
+const TeenSchema = z.object({
   _id: z.string(),
   "First Name": z.string(),
   "Last Name": z.string(),
@@ -36,77 +36,69 @@ const ExecSchema = z.object({
   "AZA/BBG": z.string(),
   Email: z.string().optional(),
   "Grad Year": z.number().optional(),
-  checkInFriday: z.boolean(),
-  checkInSaturday: z.boolean(),
+  checkInFridayNight: z.boolean(),
+  checkInSaturdayNight: z.boolean(),
+  checkInSaturdayMorning: z.boolean(),
+  checkInSundayMorning: z.boolean(),
 });
 
-type Exec = z.infer<typeof ExecSchema>;
+type Teen = z.infer<typeof TeenSchema>;
 
 const CheckInScreen: React.FC = () => {
-  // // Set selected day based on current day. if not friday or saturday, set to friday
-  // const currentDate = new Date();
-  // const currentDay = currentDate.getDay();
-  // const [selectedDay, setSelectedDay] = useState<string>(
-  //   currentDay === 6 ? "Saturday" : "Friday"
-  // );
-
-  const [execs, setExecs] = useState<Record<string, Exec>>({});
-  const [selectedDay, setSelectedDay] = useState<string>("Saturday");
+  const [teens, setTeens] = useState<Record<string, Teen>>({});
+  const [selectedDay, setSelectedDay] = useState<string>("Friday Night");
   const [selectedGroup, setSelectedGroup] = useState<string>("All");
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState<string>("");
-  // const [currentTime, setCurrentTime] = useState("");
   const [showStats, setShowStats] = useState<boolean>(true);
-  const days = ["Friday", "Saturday"];
+  const days = [
+    "Friday Night",
+    "Saturday Morning",
+    "Saturday Night",
+    "Sunday Morning",
+  ];
   const groups = ["All", "AZA", "BBG"];
 
   useEffect(() => {
-    fetchExecs();
-    const fetchInterval = setInterval(fetchExecs, 7000);
-
-    // const updateTime = () => {
-    //   setCurrentTime(new Date().toLocaleTimeString());
-    // };
-
-    // updateTime(); // Set initial time
-    // const timeInterval = setInterval(updateTime, 1000);
+    fetchTeens();
+    const fetchInterval = setInterval(fetchTeens, 7000);
 
     return () => {
       clearInterval(fetchInterval);
-      // clearInterval(timeInterval);
     };
   }, []);
 
-  const fetchExecs = async () => {
+  const fetchTeens = async () => {
     try {
-      const response = await fetch("/api/execs");
+      const response = await fetch("/api/room-checks/nre/dc-2025");
       if (!response.ok) throw new Error("Failed to fetch");
-      const execsData = await response.json();
+      const teensData = await response.json();
 
-      const execs: Record<string, Exec> = {};
-      execsData.forEach((exec: z.infer<typeof ExecSchema>) => {
-        execs[exec._id] = ExecSchema.parse(exec);
+      const teens: Record<string, Teen> = {};
+      teensData.forEach((teen: z.infer<typeof TeenSchema>) => {
+        teens[teen._id] = TeenSchema.parse(teen);
       });
 
-      setExecs(execs);
+      setTeens(teens);
     } catch (error) {
-      console.error("Error fetching execs:", error);
+      console.error("Error fetching teens:", error);
     }
   };
 
-  const toggleCheckIn = async (execId: string) => {
-    const fieldName = `checkIn${selectedDay}`;
-    const currentStatus = execs[execId][fieldName as keyof Exec];
+  const toggleCheckIn = async (teenId: string) => {
+    // Update the check-in status for the selected day. Replace spaces in the day name with empty string
+    const fieldName = `checkIn${selectedDay.replace(/ /g, "")}`;
+    const currentStatus = teens[teenId][fieldName as keyof Teen];
     const newStatus = !currentStatus;
 
     try {
-      const response = await fetch("/api/execs", {
+      const response = await fetch("/api/room-checks/nre/dc-2025", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          execId,
+          teenId,
           fieldName,
           newStatus,
         }),
@@ -114,23 +106,23 @@ const CheckInScreen: React.FC = () => {
 
       if (!response.ok) throw new Error("Failed to update");
 
-      setExecs((prevExecs) => ({
-        ...prevExecs,
-        [execId]: { ...prevExecs[execId], [fieldName]: newStatus },
+      setTeens((prevTeens) => ({
+        ...prevTeens,
+        [teenId]: { ...prevTeens[teenId], [fieldName]: newStatus },
       }));
     } catch (error) {
       console.error("Error updating check-in status:", error);
     }
   };
 
-  const groupExecsByRoom = (execs: Record<string, Exec>) => {
-    const grouped: Record<string, Record<string, Exec>> = {};
-    Object.entries(execs).forEach(([id, exec]) => {
-      const room = exec.Room;
+  const groupTeensByRoom = (teens: Record<string, Teen>) => {
+    const grouped: Record<string, Record<string, Teen>> = {};
+    Object.entries(teens).forEach(([id, teen]) => {
+      const room = teen.Room;
       if (!grouped[room]) {
         grouped[room] = {};
       }
-      grouped[room][id] = exec;
+      grouped[room][id] = teen;
     });
 
     // Sort the rooms by room number
@@ -143,18 +135,18 @@ const CheckInScreen: React.FC = () => {
       .reduce((acc, room) => {
         acc[room] = grouped[room];
         return acc;
-      }, {} as Record<string, Record<string, Exec>>);
+      }, {} as Record<string, Record<string, Teen>>);
 
     return sortedGrouped;
   };
 
-  const filterRooms = (rooms: Record<string, Record<string, Exec>>) => {
-    return Object.entries(rooms).reduce((acc, [room, roomExecs]) => {
+  const filterRooms = (rooms: Record<string, Record<string, Teen>>) => {
+    return Object.entries(rooms).reduce((acc, [room, roomTeens]) => {
       // Apply group filter
       if (
         selectedGroup !== "All" &&
-        !Object.values(roomExecs).some(
-          (exec) => exec["AZA/BBG"] === selectedGroup
+        !Object.values(roomTeens).some(
+          (teen) => teen["AZA/BBG"] === selectedGroup
         )
       ) {
         return acc;
@@ -163,50 +155,50 @@ const CheckInScreen: React.FC = () => {
       // Apply search filter
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
-        const matchingExecs = Object.entries(roomExecs).filter(([, exec]) => {
+        const matchingTeens = Object.entries(roomTeens).filter(([, teen]) => {
           return (
             (
-              exec["First Name"].toLowerCase() +
+              teen["First Name"].toLowerCase() +
               " " +
-              exec["Last Name"].toLowerCase()
+              teen["Last Name"].toLowerCase()
             ).includes(searchLower) ||
-            exec.Chapter?.toLowerCase().includes(searchLower) ||
-            exec.Room.toLowerCase().includes(searchLower)
+            teen.Chapter?.toLowerCase().includes(searchLower) ||
+            teen.Room.toLowerCase().includes(searchLower)
           );
         });
 
-        if (matchingExecs.length > 0) {
-          acc[room] = Object.fromEntries(matchingExecs);
+        if (matchingTeens.length > 0) {
+          acc[room] = Object.fromEntries(matchingTeens);
         }
         return acc;
       }
 
-      acc[room] = roomExecs;
+      acc[room] = roomTeens;
       return acc;
-    }, {} as Record<string, Record<string, Exec>>);
+    }, {} as Record<string, Record<string, Teen>>);
   };
 
   const calculateProgress = () => {
-    const filteredExecs = Object.values(execs).filter(
-      (exec) => selectedGroup === "All" || exec["AZA/BBG"] === selectedGroup
+    const filteredTeens = Object.values(teens).filter(
+      (teen) => selectedGroup === "All" || teen["AZA/BBG"] === selectedGroup
     );
-    const total = filteredExecs.length;
-    const checkedIn = filteredExecs.filter(
-      (exec) => exec[`checkIn${selectedDay}` as keyof Exec] === true
+    const total = filteredTeens.length;
+    const checkedIn = filteredTeens.filter(
+      (teen) => teen[`checkIn${selectedDay}` as keyof Teen] === true
     ).length;
     return total > 0 ? (checkedIn / total) * 100 : 0;
   };
 
-  const isRoomFullyCheckedIn = (roomExecs: Record<string, Exec>) => {
-    return Object.values(roomExecs).every(
-      (exec) => exec[`checkIn${selectedDay}` as keyof Exec] === true
+  const isRoomFullyCheckedIn = (roomTeens: Record<string, Teen>) => {
+    return Object.values(roomTeens).every(
+      (teen) => teen[`checkIn${selectedDay}` as keyof Teen] === true
     );
   };
 
-  const countCheckIns = (roomExecs: Record<string, Exec>) => {
-    const total = Object.keys(roomExecs).length;
-    const checkedIn = Object.values(roomExecs).filter(
-      (exec) => exec[`checkIn${selectedDay}` as keyof Exec] === true
+  const countCheckIns = (roomTeens: Record<string, Teen>) => {
+    const total = Object.keys(roomTeens).length;
+    const checkedIn = Object.values(roomTeens).filter(
+      (teen) => teen[`checkIn${selectedDay}` as keyof Teen] === true
     ).length;
     return `${checkedIn}/${total}`;
   };
@@ -223,7 +215,7 @@ const CheckInScreen: React.FC = () => {
     });
   };
 
-  const groupedExecs = filterRooms(groupExecsByRoom(execs));
+  const groupedTeens = filterRooms(groupTeensByRoom(teens));
 
   return (
     <main className="container mx-auto p-6">
@@ -287,7 +279,7 @@ const CheckInScreen: React.FC = () => {
                         Total Participants
                       </p>
                       <h3 className="text-2xl font-bold">
-                        {Object.keys(execs).length}
+                        {Object.keys(teens).length}
                       </h3>
                     </div>
                     <Users className="w-8 h-8 text-blue-500" />
@@ -301,7 +293,7 @@ const CheckInScreen: React.FC = () => {
                     <div>
                       <p className="text-gray-500 text-sm">Total Rooms</p>
                       <h3 className="text-2xl font-bold">
-                        {Object.keys(groupedExecs).length}
+                        {Object.keys(groupedTeens).length}
                       </h3>
                     </div>
                     <Building className="w-8 h-8 text-purple-500" />
@@ -355,23 +347,23 @@ const CheckInScreen: React.FC = () => {
           </Card>
 
           <div className="space-y-4">
-            {Object.entries(groupedExecs).length === 0 ? (
+            {Object.entries(groupedTeens).length === 0 ? (
               <Alert>
                 <AlertDescription>
                   No rooms found matching your search criteria
                 </AlertDescription>
               </Alert>
             ) : (
-              Object.entries(groupedExecs).map(([room, roomExecs]) => {
-                const isFullyCheckedIn = isRoomFullyCheckedIn(roomExecs);
+              Object.entries(groupedTeens).map(([room, roomTeens]) => {
+                const isFullyCheckedIn = isRoomFullyCheckedIn(roomTeens);
                 const isExpanded = expandedRooms.has(room);
-                const firstExec = Object.values(roomExecs)[0];
+                const firstTeen = Object.values(roomTeens)[0];
 
                 return (
                   <Card
                     key={room}
                     className={`transition-shadow hover:shadow-md ${
-                      firstExec["AZA/BBG"] === "AZA"
+                      firstTeen["AZA/BBG"] === "AZA"
                         ? "bg-blue-50"
                         : "bg-red-50"
                     }`}
@@ -389,7 +381,7 @@ const CheckInScreen: React.FC = () => {
                             variant={isFullyCheckedIn ? "default" : "secondary"}
                             className={isFullyCheckedIn ? "bg-green-500" : ""}
                           >
-                            {countCheckIns(roomExecs)}
+                            {countCheckIns(roomTeens)}
                           </Badge>
                         </div>
                         {isExpanded ? (
@@ -402,33 +394,33 @@ const CheckInScreen: React.FC = () => {
 
                     {isExpanded && (
                       <CardContent className="p-6 space-y-3">
-                        {Object.entries(roomExecs).map(([id, exec]) => (
+                        {Object.entries(roomTeens).map(([id, teen]) => (
                           <div
                             key={id}
                             className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
                           >
                             <div className="flex flex-col">
                               <span className="font-medium">
-                                {exec["First Name"]} {exec["Last Name"]}
+                                {teen["First Name"]} {teen["Last Name"]}
                               </span>
                               <span className="text-sm text-gray-500">
-                                {exec.Chapter}
+                                {teen.Chapter}
                               </span>
                             </div>
                             <Button
                               onClick={() => toggleCheckIn(id)}
                               variant={
-                                exec[`checkIn${selectedDay}` as keyof Exec]
+                                teen[`checkIn${selectedDay}` as keyof Teen]
                                   ? "secondary"
                                   : "default"
                               }
                               className={`min-w-[120px] ${
-                                exec[`checkIn${selectedDay}` as keyof Exec]
+                                teen[`checkIn${selectedDay}` as keyof Teen]
                                   ? "bg-green-500 hover:bg-green-600"
                                   : "bg-red-500 hover:bg-red-600"
                               } text-white`}
                             >
-                              {exec[`checkIn${selectedDay}` as keyof Exec]
+                              {teen[`checkIn${selectedDay}` as keyof Teen]
                                 ? "Checked In"
                                 : "Check In"}
                             </Button>
