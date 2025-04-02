@@ -23,6 +23,7 @@ import {
   Users,
   Building,
   ChevronUp,
+  ArrowUpDown,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -51,6 +52,7 @@ const CheckInScreen: React.FC = () => {
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showStats, setShowStats] = useState<boolean>(true);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const days = [
     "Friday Night",
     "Saturday Morning",
@@ -115,6 +117,10 @@ const CheckInScreen: React.FC = () => {
     }
   };
 
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
   const groupTeensByRoom = (teens: Record<string, Teen>) => {
     const grouped: Record<string, Record<string, Teen>> = {};
     Object.entries(teens).forEach(([id, teen]) => {
@@ -125,12 +131,20 @@ const CheckInScreen: React.FC = () => {
       grouped[room][id] = teen;
     });
 
-    // Sort the rooms by room number
+    // Sort the rooms by room name
     const sortedGrouped = Object.keys(grouped)
       .sort((a, b) => {
-        const aNumber = parseInt(a.match(/\d+/)?.[0] || "0", 10);
-        const bNumber = parseInt(b.match(/\d+/)?.[0] || "0", 10);
-        return aNumber - bNumber;
+        if (sortOrder === "asc") {
+          return a.localeCompare(b, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          });
+        } else {
+          return b.localeCompare(a, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          });
+        }
       })
       .reduce((acc, room) => {
         acc[room] = grouped[room];
@@ -184,21 +198,24 @@ const CheckInScreen: React.FC = () => {
     );
     const total = filteredTeens.length;
     const checkedIn = filteredTeens.filter(
-      (teen) => teen[`checkIn${selectedDay}` as keyof Teen] === true
+      (teen) =>
+        teen[`checkIn${selectedDay.replace(/ /g, "")}` as keyof Teen] === true
     ).length;
     return total > 0 ? (checkedIn / total) * 100 : 0;
   };
 
   const isRoomFullyCheckedIn = (roomTeens: Record<string, Teen>) => {
     return Object.values(roomTeens).every(
-      (teen) => teen[`checkIn${selectedDay}` as keyof Teen] === true
+      (teen) =>
+        teen[`checkIn${selectedDay.replace(/ /g, "")}` as keyof Teen] === true
     );
   };
 
   const countCheckIns = (roomTeens: Record<string, Teen>) => {
     const total = Object.keys(roomTeens).length;
     const checkedIn = Object.values(roomTeens).filter(
-      (teen) => teen[`checkIn${selectedDay}` as keyof Teen] === true
+      (teen) =>
+        teen[`checkIn${selectedDay.replace(/ /g, "")}` as keyof Teen] === true
     ).length;
     return `${checkedIn}/${total}`;
   };
@@ -342,6 +359,15 @@ const CheckInScreen: React.FC = () => {
                     className="pl-10"
                   />
                 </div>
+
+                <Button
+                  variant="outline"
+                  onClick={toggleSortOrder}
+                  className="flex items-center space-x-2"
+                >
+                  <span>Sort {sortOrder === "asc" ? "A→Z" : "Z→A"}</span>
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -374,9 +400,7 @@ const CheckInScreen: React.FC = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <span className="text-lg font-semibold">
-                            Room {room}
-                          </span>
+                          <span className="text-lg font-semibold">{room}</span>
                           <Badge
                             variant={isFullyCheckedIn ? "default" : "secondary"}
                             className={isFullyCheckedIn ? "bg-green-500" : ""}
@@ -404,23 +428,38 @@ const CheckInScreen: React.FC = () => {
                                 {teen["First Name"]} {teen["Last Name"]}
                               </span>
                               <span className="text-sm text-gray-500">
-                                {teen.Chapter}
+                                {teen["Chapter"]}
                               </span>
                             </div>
                             <Button
                               onClick={() => toggleCheckIn(id)}
                               variant={
-                                teen[`checkIn${selectedDay}` as keyof Teen]
+                                teen[
+                                  `checkIn${selectedDay.replace(
+                                    / /g,
+                                    ""
+                                  )}` as keyof Teen
+                                ]
                                   ? "secondary"
                                   : "default"
                               }
                               className={`min-w-[120px] ${
-                                teen[`checkIn${selectedDay}` as keyof Teen]
+                                teen[
+                                  `checkIn${selectedDay.replace(
+                                    / /g,
+                                    ""
+                                  )}` as keyof Teen
+                                ]
                                   ? "bg-green-500 hover:bg-green-600"
                                   : "bg-red-500 hover:bg-red-600"
                               } text-white`}
                             >
-                              {teen[`checkIn${selectedDay}` as keyof Teen]
+                              {teen[
+                                `checkIn${selectedDay.replace(
+                                  / /g,
+                                  ""
+                                )}` as keyof Teen
+                              ]
                                 ? "Checked In"
                                 : "Check In"}
                             </Button>
