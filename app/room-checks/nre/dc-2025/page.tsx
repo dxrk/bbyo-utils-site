@@ -26,7 +26,7 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
 
 const TeenSchema = z.object({
   _id: z.string(),
@@ -247,12 +247,12 @@ const CheckInScreen: React.FC = () => {
                 height={40}
               />
               <h2 className="text-2xl font-bold">
-                NRE Regional Convention 2025 Room Checks
+                NRE: DC Council Convention 2025 Room Checks
               </h2>
             </div>
-            <Link href="/room-checks">
+            {/* <Link href="/room-checks">
               <Button variant="outline">Back to Room Checks</Button>
-            </Link>
+            </Link> */}
           </div>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
