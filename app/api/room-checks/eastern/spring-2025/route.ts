@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb";
 export async function GET() {
   try {
     const db = await connectToMongoDB();
-    const collection = db.collection("nre-dc-2025");
+    const collection = db.collection("eastern-spring-2025");
     const teensData = await collection.find().toArray();
 
     // Convert MongoDB _id to string
@@ -28,7 +28,7 @@ export async function PUT(request: Request) {
   try {
     const { teenId, fieldName, newStatus } = await request.json();
     const db = await connectToMongoDB();
-    const collection = db.collection("nre-dc-2025");
+    const collection = db.collection("eastern-spring-2025");
 
     const result = await collection.updateOne(
       { _id: new ObjectId(teenId) },

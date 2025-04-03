@@ -5,6 +5,11 @@ export const checksData = [
     deprecated: false,
   },
   {
+    name: "Eastern Spring Convention 2025",
+    route: "eastern/spring-25",
+    deprecated: false,
+  },
+  {
     name: "August Execs 2024",
     route: "execs",
     deprecated: true,
