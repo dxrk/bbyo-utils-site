@@ -23,10 +23,8 @@ import {
   Users,
   Building,
   ChevronUp,
-  ArrowUpDown,
 } from "lucide-react";
 import Image from "next/image";
-// import Link from "next/link";
 
 const TeenSchema = z.object({
   _id: z.string(),
@@ -50,7 +48,6 @@ const CheckInScreen: React.FC = () => {
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showStats, setShowStats] = useState<boolean>(true);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const days = ["Friday Night", "Saturday Night"];
   const groups = ["All", "AZA", "BBG"];
 
@@ -110,10 +107,6 @@ const CheckInScreen: React.FC = () => {
     }
   };
 
-  const toggleSortOrder = () => {
-    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-  };
-
   const groupTeensByRoom = (teens: Record<string, Teen>) => {
     const grouped: Record<string, Record<string, Teen>> = {};
     Object.entries(teens).forEach(([id, teen]) => {
@@ -125,24 +118,10 @@ const CheckInScreen: React.FC = () => {
     });
 
     // Sort the rooms by room name
-    const sortedGrouped = Object.keys(grouped)
-      .sort((a, b) => {
-        if (sortOrder === "asc") {
-          return a.localeCompare(b, undefined, {
-            numeric: true,
-            sensitivity: "base",
-          });
-        } else {
-          return b.localeCompare(a, undefined, {
-            numeric: true,
-            sensitivity: "base",
-          });
-        }
-      })
-      .reduce((acc, room) => {
-        acc[room] = grouped[room];
-        return acc;
-      }, {} as Record<string, Record<string, Teen>>);
+    const sortedGrouped = Object.keys(grouped).reduce((acc, room) => {
+      acc[room] = grouped[room];
+      return acc;
+    }, {} as Record<string, Record<string, Teen>>);
 
     return sortedGrouped;
   };
@@ -243,9 +222,6 @@ const CheckInScreen: React.FC = () => {
                 Eastern Spring Convention 2025 Room Checks
               </h2>
             </div>
-            {/* <Link href="/room-checks">
-              <Button variant="outline">Back to Room Checks</Button>
-            </Link> */}
           </div>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
@@ -352,15 +328,6 @@ const CheckInScreen: React.FC = () => {
                     className="pl-10"
                   />
                 </div>
-
-                {/* <Button
-                  variant="outline"
-                  onClick={toggleSortOrder}
-                  className="flex items-center space-x-2"
-                >
-                  <span>Sort {sortOrder === "asc" ? "A→Z" : "Z→A"}</span>
-                  <ArrowUpDown className="h-4 w-4" />
-                </Button> */}
               </div>
             </CardContent>
           </Card>
