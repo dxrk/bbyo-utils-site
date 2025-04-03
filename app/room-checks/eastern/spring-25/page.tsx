@@ -353,14 +353,14 @@ const CheckInScreen: React.FC = () => {
                   />
                 </div>
 
-                <Button
+                {/* <Button
                   variant="outline"
                   onClick={toggleSortOrder}
                   className="flex items-center space-x-2"
                 >
                   <span>Sort {sortOrder === "asc" ? "A→Z" : "Z→A"}</span>
                   <ArrowUpDown className="h-4 w-4" />
-                </Button>
+                </Button> */}
               </div>
             </CardContent>
           </Card>
