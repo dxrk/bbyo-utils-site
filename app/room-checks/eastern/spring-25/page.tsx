@@ -231,236 +231,236 @@ const CheckInScreen: React.FC = () => {
   const groupedTeens = filterRooms(groupTeensByRoom(teens));
 
   return (
-    <main className="container mx-auto p-6">
-      <Card>
-        <CardHeader className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Image
-                src="/bbyo-logo.png"
-                alt="BBYO Logo"
-                width={40}
-                height={40}
-              />
-              <h2 className="text-2xl font-bold">
-                Eastern Spring Convention 2025 Room Checks
-              </h2>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          <Button
-            variant="outline"
-            onClick={() => setShowStats(!showStats)}
-            className="flex items-center space-x-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <span className="text-sm">
-              {showStats ? "Hide Stats" : "Show Stats"}
-            </span>
-            {showStats ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </Button>
-
-          {showStats && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-sm">Total Check-ins</p>
-                      <h3 className="text-2xl font-bold">
-                        {calculateProgress().toFixed(1)}%
-                      </h3>
-                    </div>
-                    <CheckCircle2 className="w-8 h-8 text-green-500" />
-                  </div>
-                  <Progress value={calculateProgress()} className="mt-4" />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-sm">
-                        Total Participants
-                      </p>
-                      <h3 className="text-2xl font-bold">
-                        {Object.keys(teens).length}
-                      </h3>
-                    </div>
-                    <Users className="w-8 h-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-sm">Total Rooms</p>
-                      <h3 className="text-2xl font-bold">
-                        {Object.keys(groupedTeens).length}
-                      </h3>
-                    </div>
-                    <Building className="w-8 h-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
-                <Select value={selectedDay} onValueChange={setSelectedDay}>
-                  <SelectTrigger className="w-full md:w-48">
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {days.map((day) => (
-                      <SelectItem key={day} value={day}>
-                        {day}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                  <SelectTrigger className="w-full md:w-48">
-                    <SelectValue placeholder="Select group" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groups.map((group) => (
-                      <SelectItem key={group} value={group}>
-                        {group}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="relative flex-grow">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="Search by name, chapter, or room..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto p-4">
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Image
+                  src="/bbyo-logo.png"
+                  alt="BBYO Logo"
+                  width={48}
+                  height={48}
+                  className="rounded-lg"
+                />
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Eastern Spring Convention 2025
+                  </h1>
+                  <p className="text-gray-500">Room Check Dashboard</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
+        <Button
+          variant="ghost"
+          onClick={() => setShowStats(!showStats)}
+          className="flex items-center space-x-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          <span className="text-sm">
+            {showStats ? "Hide Stats" : "Show Stats"}
+          </span>
+          {showStats ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </Button>
 
-          <div className="space-y-4">
-            {Object.entries(groupedTeens).length === 0 ? (
-              <Alert>
-                <AlertDescription>
-                  No rooms found matching your search criteria
-                </AlertDescription>
-              </Alert>
-            ) : (
-              Object.entries(groupedTeens).map(([room, roomTeens]) => {
-                const isFullyCheckedIn = isRoomFullyCheckedIn(roomTeens);
-                const isExpanded = expandedRooms.has(room);
-                const firstTeen = Object.values(roomTeens)[0];
+        {showStats && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">Total Check-ins</p>
+                    <h3 className="text-2xl font-bold">
+                      {calculateProgress().toFixed(1)}%
+                    </h3>
+                  </div>
+                  <CheckCircle2 className="w-8 h-8 text-green-500" />
+                </div>
+                <Progress value={calculateProgress()} className="mt-4" />
+              </CardContent>
+            </Card>
 
-                return (
-                  <Card
-                    key={room}
-                    className={`transition-shadow hover:shadow-md ${
-                      firstTeen["AZA/BBG"] === "AZA"
-                        ? "bg-blue-50"
-                        : "bg-red-50"
-                    }`}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">Total Participants</p>
+                    <h3 className="text-2xl font-bold">
+                      {Object.keys(teens).length}
+                    </h3>
+                  </div>
+                  <Users className="w-8 h-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">Total Rooms</p>
+                    <h3 className="text-2xl font-bold">
+                      {Object.keys(groupedTeens).length}
+                    </h3>
+                  </div>
+                  <Building className="w-8 h-8 text-purple-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
+              <Select value={selectedDay} onValueChange={setSelectedDay}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {days.map((day) => (
+                    <SelectItem key={day} value={day}>
+                      {day}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Select group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((group) => (
+                    <SelectItem key={group} value={group}>
+                      {group}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search by name, chapter, or room..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          {Object.entries(groupedTeens).length === 0 ? (
+            <Alert>
+              <AlertDescription>
+                No rooms found matching your search criteria
+              </AlertDescription>
+            </Alert>
+          ) : (
+            Object.entries(groupedTeens).map(([room, roomTeens]) => {
+              const isFullyCheckedIn = isRoomFullyCheckedIn(roomTeens);
+              const isExpanded = expandedRooms.has(room);
+              const firstTeen = Object.values(roomTeens)[0];
+
+              return (
+                <Card
+                  key={room}
+                  className={`transition-shadow hover:shadow-md ${
+                    firstTeen["AZA/BBG"] === "AZA" ? "bg-blue-50" : "bg-red-50"
+                  }`}
+                >
+                  <CardHeader
+                    className="cursor-pointer hover:bg-opacity-80 transition-colors p-6"
+                    onClick={() => toggleRoomExpansion(room)}
                   >
-                    <CardHeader
-                      className="cursor-pointer hover:bg-opacity-80 transition-colors p-6"
-                      onClick={() => toggleRoomExpansion(room)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <span className="text-lg font-semibold">
-                            Cabin {room}
-                          </span>
-                          <Badge
-                            variant={isFullyCheckedIn ? "default" : "secondary"}
-                            className={isFullyCheckedIn ? "bg-green-500" : ""}
-                          >
-                            {countCheckIns(roomTeens)}
-                          </Badge>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronDown className="w-5 h-5 text-gray-500" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-gray-500" />
-                        )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-lg font-semibold">
+                          Cabin {room}
+                        </span>
+                        <Badge
+                          variant={isFullyCheckedIn ? "default" : "secondary"}
+                          className={isFullyCheckedIn ? "bg-green-500" : ""}
+                        >
+                          {countCheckIns(roomTeens)}
+                        </Badge>
                       </div>
-                    </CardHeader>
+                      {isExpanded ? (
+                        <ChevronDown className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-500" />
+                      )}
+                    </div>
+                  </CardHeader>
 
-                    {isExpanded && (
-                      <CardContent className="p-6 space-y-3">
-                        {Object.entries(roomTeens).map(([id, teen]) => (
-                          <div
-                            key={id}
-                            className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
-                          >
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {teen["First Name"]} {teen["Last Name"]}
-                              </span>
-                              <span className="text-sm text-gray-500">
-                                {teen["Chapter"]}
-                              </span>
-                            </div>
-                            <Button
-                              onClick={() => toggleCheckIn(id)}
-                              variant={
-                                teen[
-                                  `checkIn${selectedDay.replace(
-                                    / /g,
-                                    ""
-                                  )}` as keyof Teen
-                                ]
-                                  ? "secondary"
-                                  : "default"
-                              }
-                              className={`min-w-[120px] ${
-                                teen[
-                                  `checkIn${selectedDay.replace(
-                                    / /g,
-                                    ""
-                                  )}` as keyof Teen
-                                ]
-                                  ? "bg-green-500 hover:bg-green-600"
-                                  : "bg-red-500 hover:bg-red-600"
-                              } text-white`}
-                            >
-                              {teen[
+                  {isExpanded && (
+                    <CardContent className="p-6 space-y-3">
+                      {Object.entries(roomTeens).map(([id, teen]) => (
+                        <div
+                          key={id}
+                          className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {teen["First Name"]} {teen["Last Name"]}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {teen["Chapter"]}
+                            </span>
+                          </div>
+                          <Button
+                            onClick={() => toggleCheckIn(id)}
+                            variant={
+                              teen[
                                 `checkIn${selectedDay.replace(
                                   / /g,
                                   ""
                                 )}` as keyof Teen
                               ]
-                                ? "Checked In"
-                                : "Check In"}
-                            </Button>
-                          </div>
-                        ))}
-                      </CardContent>
-                    )}
-                  </Card>
-                );
-              })
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+                                ? "secondary"
+                                : "default"
+                            }
+                            className={`min-w-[120px] ${
+                              teen[
+                                `checkIn${selectedDay.replace(
+                                  / /g,
+                                  ""
+                                )}` as keyof Teen
+                              ]
+                                ? "bg-green-500 hover:bg-green-600"
+                                : "bg-red-500 hover:bg-red-600"
+                            } text-white`}
+                          >
+                            {teen[
+                              `checkIn${selectedDay.replace(
+                                / /g,
+                                ""
+                              )}` as keyof Teen
+                            ]
+                              ? "Checked In"
+                              : "Check In"}
+                          </Button>
+                        </div>
+                      ))}
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
