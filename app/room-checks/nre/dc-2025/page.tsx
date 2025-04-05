@@ -70,6 +70,46 @@ const CheckInScreen: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const now = new Date();
+
+    // Convert to Eastern Time
+    const estNow = new Date(
+      now.toLocaleString("en-US", { timeZone: "America/New_York" })
+    );
+    const day = estNow.getDay(); // 0 = Sunday, ..., 6 = Saturday
+    const hour = estNow.getHours();
+
+    let selected: string;
+
+    const isMorning = hour >= 4 && hour < 16; // 4am to 4pm
+
+    if (day === 6 && isMorning) {
+      // Saturday Morning
+      selected = "Saturday Morning";
+    } else if (day === 6) {
+      // Saturday Night
+      selected = "Saturday Night";
+    } else if (day === 0 && isMorning) {
+      // Sunday Morning
+      selected = "Sunday Morning";
+    } else if (day === 0 || day === 1 || day === 2) {
+      // Sunday after 4pm, or Monday/Tuesday = Saturday Night
+      selected = "Saturday Night";
+    } else if (day === 5 && hour >= 4) {
+      // Friday after 4am = Friday Night
+      selected = "Friday Night";
+    } else if (day === 5 || day === 4 || day === 3) {
+      // Friday before 4am, Thursday, or Wednesday = Friday Night
+      selected = "Friday Night";
+    } else {
+      // Default catch-all (shouldn't hit this)
+      selected = "Friday Night";
+    }
+
+    setSelectedDay(selected);
+  }, []);
+
   const fetchTeens = async () => {
     try {
       const response = await fetch("/api/room-checks/nre/dc-2025");

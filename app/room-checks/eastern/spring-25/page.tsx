@@ -60,6 +60,30 @@ const CheckInScreen: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const now = new Date();
+
+    // Convert to Eastern Time
+    const estNow = new Date(
+      now.toLocaleString("en-US", { timeZone: "America/New_York" })
+    );
+    const day = estNow.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const hour = estNow.getHours();
+
+    // "Friday Night" = Wednesday (3) → Saturday before 4am
+    const isFridayNight =
+      day === 3 ||
+      day === 4 || // Wednesday or Thursday
+      day === 5 || // Friday (any time)
+      (day === 6 && hour < 4); // Saturday before 4am
+
+    if (isFridayNight) {
+      setSelectedDay("Friday Night");
+    } else {
+      setSelectedDay("Saturday Night");
+    }
+  }, []);
+
   const fetchTeens = async () => {
     try {
       const response = await fetch("/api/room-checks/eastern/spring-2025");
