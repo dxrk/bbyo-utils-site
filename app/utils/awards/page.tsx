@@ -53,8 +53,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
 
 interface AwardRecord {
   id: string;
@@ -105,16 +103,6 @@ export default function AwardsUtil() {
 
     fetchAwardTypes();
   }, []);
-
-  const { data: session, status } = useSession();
-
-  if (status === "loading") {
-    return null;
-  }
-
-  if (!session) {
-    redirect("/");
-  }
 
   const parseCSVBuffer = function (buffer: Buffer): Promise<AwardRecord[]> {
     return new Promise((resolve, reject) => {

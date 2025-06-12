@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 // List of deprecated tool routes
 const deprecatedRoutes = ["/utils/summer-crm", "/utils/ic-launch"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if the route is deprecated
@@ -22,13 +23,20 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Require authentication for all /utils/* pages
+  if (pathname.startsWith("/utils/")) {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    if (!token) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/utils/summer-crm/:path*",
-    "/utils/movement-launch/:path*",
-    "/utils/ic-launch/:path*",
-  ],
+  matcher: ["/utils/:path*"],
 };

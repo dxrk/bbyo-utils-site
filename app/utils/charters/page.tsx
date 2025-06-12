@@ -28,8 +28,6 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import React from "react";
-import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
 
 let html2pdf: (
   arg0: HTMLDivElement,
@@ -84,16 +82,6 @@ export default function ChartersUtil() {
     yPosition: NaN,
     fontSize: NaN,
   });
-
-  const { data: session, status } = useSession();
-
-  if (status === "loading") {
-    return null;
-  }
-
-  if (!session) {
-    redirect("/");
-  }
 
   const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
