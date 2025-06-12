@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSheetData } from "./gs-action";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 interface LaunchItemProps {
@@ -87,6 +87,7 @@ const LaunchItem: React.FC<LaunchItemProps> = ({ value, color, footer }) => {
 
 export default function MovementLaunch() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [data, setData] = useState<SheetsData>({
     delegates: 0,
     awards: 0,
@@ -331,7 +332,8 @@ export default function MovementLaunch() {
   }
 
   if (!session) {
-    redirect("/");
+    router.push("/");
+    return null;
   }
 
   return (
