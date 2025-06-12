@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSheetData } from "./gs-action";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 interface LaunchItemProps {
   header?: string;
@@ -52,6 +54,16 @@ function formatNumber(num: number): string {
 }
 
 const LaunchItem: React.FC<LaunchItemProps> = ({ value, color, footer }) => {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return null;
+  }
+
+  if (!session) {
+    redirect("/");
+  }
+
   const formattedValue =
     footer === "Total" ? `$${formatNumber(value)}` : formatNumber(value);
 
