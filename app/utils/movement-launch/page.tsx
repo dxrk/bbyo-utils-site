@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSheetData } from "./gs-action";
+import { redirect } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface LaunchItemProps {
   header?: string;
@@ -84,6 +86,7 @@ const LaunchItem: React.FC<LaunchItemProps> = ({ value, color, footer }) => {
 };
 
 export default function MovementLaunch() {
+  const { data: session, status } = useSession();
   const [data, setData] = useState<SheetsData>({
     delegates: 0,
     awards: 0,
@@ -322,6 +325,14 @@ export default function MovementLaunch() {
       return () => clearTimeout(timer); // Clean up timer
     }
   }, [data.broadcast]);
+
+  if (status === "loading") {
+    return null; // Or a loading spinner
+  }
+
+  if (!session) {
+    redirect("/");
+  }
 
   return (
     <div className="bg-blue-700 text-white p-8 font-sans min-h-screen relative">
