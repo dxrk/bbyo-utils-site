@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSheetData } from "./gs-action";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 interface LaunchItemProps {
   header?: string;
@@ -86,11 +84,6 @@ const LaunchItem: React.FC<LaunchItemProps> = ({ value, color, footer }) => {
 };
 
 export default function MovementLaunch() {
-  // Authentication hooks
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  // All state hooks
   const [data, setData] = useState<SheetsData>({
     delegates: 0,
     awards: 0,
@@ -107,8 +100,7 @@ export default function MovementLaunch() {
   >([]);
   const [showBroadcast, setShowBroadcast] = useState(false);
   const [broadcastMsg, setBroadcastMsg] = useState("");
-
-  // All ref hooks
+  const [broadcastManualClose, setBroadcastManualClose] = useState(false);
   const lastBroadcastRef = useRef("");
   const prevSheetDataRef = useRef<string[][]>([]);
   const headerRowRef = useRef<string[]>([]);
@@ -116,7 +108,6 @@ export default function MovementLaunch() {
   const initialBroadcastRef = useRef<string | null>(null);
   const debouncedFeedUpdate = useRef<NodeJS.Timeout | null>(null);
 
-  // Callback hooks
   const updateFeed = useCallback(
     (newItem: {
       type: string;
@@ -135,16 +126,7 @@ export default function MovementLaunch() {
     []
   );
 
-  // Effect hooks
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/");
-    }
-  }, [status, router]);
-
-  useEffect(() => {
-    if (!session) return;
-
     async function getLaunchData() {
       try {
         const result = await getSheetData();
@@ -295,48 +277,57 @@ export default function MovementLaunch() {
           });
         }
       } catch (error) {
-        console.error("Error fetching launch data:", error);
+        console.error("Error fetching data:", error);
       }
     }
 
+    // Initial fetch
     getLaunchData();
-    const interval = setInterval(getLaunchData, 5000);
-    return () => clearInterval(interval);
-  }, [session, updateFeed]);
 
+    // Fetch data every 10 seconds
+    const intervalId = setInterval(getLaunchData, 10000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Watch for broadcast message changes
   useEffect(() => {
-    if (!session) return;
-
-    // Watch for broadcast message changes
     if (
-      initialBroadcastRef.current &&
-      initialBroadcastRef.current !== lastBroadcastRef.current
+      hasInitialized.current &&
+      data.broadcast &&
+      data.broadcast !== lastBroadcastRef.current &&
+      data.broadcast !== initialBroadcastRef.current // Prevent initial broadcast
     ) {
-      setBroadcastMsg(initialBroadcastRef.current);
+      setBroadcastMsg(data.broadcast);
       setShowBroadcast(true);
-      lastBroadcastRef.current = initialBroadcastRef.current;
+      setBroadcastManualClose(false);
+      lastBroadcastRef.current = data.broadcast;
+
+      // Use Framer Motion's AnimatePresence for smoother transitions
+      const timer = setTimeout(() => {
+        setShowBroadcast(false);
+        setFeed((prev) => [
+          {
+            type: "broadcast",
+            title: "Broadcast",
+            message: data.broadcast,
+            timestamp: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      }, 10000);
+
+      return () => clearTimeout(timer); // Clean up timer
     }
-  }, [session, data.broadcast]);
-
-  // Show loading state while checking authentication
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  // Don't render anything if not authenticated
-  if (!session) {
-    return null;
-  }
+  }, [data.broadcast]);
 
   return (
     <div className="bg-blue-700 text-white p-8 font-sans min-h-screen relative">
       {/* Full-screen broadcast overlay */}
       <AnimatePresence>
-        {showBroadcast && (
+        {showBroadcast && !broadcastManualClose && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center"
             initial={{ opacity: 0 }}
