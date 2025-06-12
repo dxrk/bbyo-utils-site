@@ -14,6 +14,11 @@ export async function middleware(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
 
+    // Skip auth check for auth-related routes
+    if (pathname.startsWith("/api/auth")) {
+      return NextResponse.next();
+    }
+
     // Check if the route is deprecated
     if (deprecatedRoutes.includes(pathname)) {
       // Check if the user has provided the correct password
@@ -34,8 +39,8 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Require authentication for all /utils/* pages
-    if (pathname.startsWith("/utils/")) {
+    // Require authentication for all /utils/* and /api/* pages
+    if (pathname.startsWith("/utils/") || pathname.startsWith("/api/")) {
       try {
         const token = await getToken({
           req: request,
@@ -43,10 +48,23 @@ export async function middleware(request: NextRequest) {
         });
 
         if (!token) {
+          // For API routes, return 401 instead of redirecting
+          if (pathname.startsWith("/api/")) {
+            return NextResponse.json(
+              { error: "Unauthorized" },
+              { status: 401 }
+            );
+          }
           return NextResponse.redirect(new URL("/", request.url));
         }
       } catch (error) {
         console.error("Error verifying authentication token:", error);
+        if (pathname.startsWith("/api/")) {
+          return NextResponse.json(
+            { error: "Internal Server Error" },
+            { status: 500 }
+          );
+        }
         return NextResponse.redirect(new URL("/error", request.url));
       }
     }
@@ -59,5 +77,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/utils/:path*"],
+  matcher: [
+    "/utils/:path*",
+    "/api/:path*",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };
