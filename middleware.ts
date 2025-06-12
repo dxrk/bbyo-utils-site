@@ -11,13 +11,23 @@ if (!process.env.DEPRECATED_TOOLS_PASSWORD) {
 }
 
 export async function middleware(request: NextRequest) {
-  try {
-    const { pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl;
 
-    // Skip auth check for auth-related routes
-    if (pathname.startsWith("/api/auth")) {
+  try {
+    // Skip auth check for auth-related routes and static files
+    if (
+      pathname.startsWith("/api/auth") ||
+      pathname.startsWith("/_next") ||
+      pathname === "/favicon.ico"
+    ) {
       return NextResponse.next();
     }
+
+    // Get the token first to avoid unnecessary checks
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
 
     // Check if the route is deprecated
     if (deprecatedRoutes.includes(pathname)) {
@@ -41,37 +51,25 @@ export async function middleware(request: NextRequest) {
 
     // Require authentication for all /utils/* and /api/* pages
     if (pathname.startsWith("/utils/") || pathname.startsWith("/api/")) {
-      try {
-        const token = await getToken({
-          req: request,
-          secret: process.env.NEXTAUTH_SECRET,
-        });
-
-        if (!token) {
-          // For API routes, return 401 instead of redirecting
-          if (pathname.startsWith("/api/")) {
-            return NextResponse.json(
-              { error: "Unauthorized" },
-              { status: 401 }
-            );
-          }
-          return NextResponse.redirect(new URL("/", request.url));
-        }
-      } catch (error) {
-        console.error("Error verifying authentication token:", error);
+      if (!token) {
+        // For API routes, return 401 instead of redirecting
         if (pathname.startsWith("/api/")) {
-          return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-          );
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        return NextResponse.redirect(new URL("/error", request.url));
+        // For web routes, redirect to home page
+        return NextResponse.redirect(new URL("/", request.url));
       }
     }
 
     return NextResponse.next();
   } catch (error) {
     console.error("Middleware error:", error);
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Internal Server Error" },
+        { status: 500 }
+      );
+    }
     return NextResponse.redirect(new URL("/error", request.url));
   }
 }
