@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 let html2pdf: (
   arg0: HTMLDivElement,
@@ -55,6 +57,8 @@ if (typeof window !== "undefined") {
 }
 
 export default function ChartersUtil() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [form, setForm] = useState({
     charterType: "Permanent",
     order: "AZA",
@@ -302,6 +306,15 @@ export default function ChartersUtil() {
       setIsLoading(false);
     }
   };
+
+  if (status === "loading") {
+    return null; // Or a loading spinner
+  }
+
+  if (!session) {
+    router.push("/");
+    return null;
+  }
 
   return (
     <main className="container mx-auto p-6">

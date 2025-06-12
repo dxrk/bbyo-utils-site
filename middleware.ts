@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // List of deprecated tool routes
-const deprecatedRoutes = ["/utils/summer-crm", "/utils/ic-launch"];
+const deprecatedRoutes = [
+  "/utils/summer-crm",
+  "/utils/ic-launch",
+  "/utils/awards",
+  "/utils/charters",
+];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

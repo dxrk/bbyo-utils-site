@@ -24,8 +24,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function RoomChecksRequest() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     region: "",
@@ -79,6 +83,15 @@ export default function RoomChecksRequest() {
   const handleChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  if (status === "loading") {
+    return null; // Or a loading spinner
+  }
+
+  if (!session) {
+    router.push("/");
+    return null;
+  }
 
   if (isSubmitted) {
     return (

@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import LiveFeed from "./LiveFeed";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface LaunchItemProps {
   header?: string;
@@ -142,6 +144,8 @@ const StatisticsSection: React.FC<{ data: LaunchData }> = ({ data }) => {
 };
 
 export default function ICLaunch() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [data, setData] = useState({
     cventData: {
       totalRegistrants: 0,
@@ -218,6 +222,15 @@ export default function ICLaunch() {
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       )
       .slice(0, 50);
+  }
+
+  if (status === "loading") {
+    return null; // Or a loading spinner
+  }
+
+  if (!session) {
+    router.push("/");
+    return null;
   }
 
   return (

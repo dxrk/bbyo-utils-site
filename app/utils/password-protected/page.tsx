@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 function PasswordForm() {
+  const { data: session, status } = useSession();
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -46,6 +48,15 @@ function PasswordForm() {
       setIsLoading(false);
     }
   };
+
+  if (status === "loading") {
+    return null; // Or a loading spinner
+  }
+
+  if (!session) {
+    router.push("/");
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center">

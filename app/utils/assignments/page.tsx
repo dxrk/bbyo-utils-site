@@ -21,9 +21,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function AssignmentsUtil() {
   const { toast } = useToast();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   interface Override {
     [name: string]: number;
@@ -251,6 +255,15 @@ export default function AssignmentsUtil() {
       description: "CSV file was downloaded successfully.",
     });
   };
+
+  if (status === "loading") {
+    return null; // Or a loading spinner
+  }
+
+  if (!session) {
+    router.push("/");
+    return null;
+  }
 
   return (
     <main className="container mx-auto p-6">

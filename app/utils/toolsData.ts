@@ -16,17 +16,18 @@ export const toolsData = [
   },
   {
     name: "Awards Generator",
-    description: "Generates a PDF of awards for leads/chapters.",
+    description:
+      "Need to fix font on generation, use old version on bxntal.com. Generates a PDF of awards for leads/chapters.",
     route: "utils/awards",
-    deprecated: false,
+    deprecated: true,
     type: "tool",
   },
   {
     name: "Chapter Charter Generator",
     description:
-      "Generates a temporary, celebatory, or permanent charter for a chapter.",
+      "Need to fix font on generation, use old version on bxntal.com. Generates a temporary, celebatory, or permanent charter for a chapter.",
     route: "utils/charters",
-    deprecated: false,
+    deprecated: true,
     type: "tool",
   },
   {

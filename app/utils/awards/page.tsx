@@ -53,6 +53,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface AwardRecord {
   id: string;
@@ -68,7 +70,8 @@ interface AwardRecord {
 
 export default function AwardsUtil() {
   const { toast } = useToast();
-
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [awardRecords, setAwardRecords] = useState<AwardRecord[]>([]);
@@ -528,6 +531,15 @@ export default function AwardsUtil() {
   const filteredRecords = showOnlyInvalid
     ? awardRecords.filter((record) => record.isValid === false)
     : awardRecords;
+
+  if (status === "loading") {
+    return null; // Or a loading spinner
+  }
+
+  if (!session) {
+    router.push("/");
+    return null;
+  }
 
   return (
     <main className="container mx-auto p-6">
