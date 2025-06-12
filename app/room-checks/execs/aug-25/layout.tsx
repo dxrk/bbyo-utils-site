@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "BBYO NRE Room Checks",
+  title: "BBYO August Execs 2025",
   description: "Room Checks",
 };
 

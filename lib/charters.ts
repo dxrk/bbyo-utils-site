@@ -245,10 +245,10 @@ export async function generateSvg(
     <defs>
       <style>
         ${getFontFaceStyle()}
-        .memberList { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: ${finalFontSize}px; }
-        .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif; font-size: 115px; }
-        .community { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 80px; }
-        .date { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif; font-size: 50px; }
+        .memberList { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif !important; font-size: ${finalFontSize}px; }
+        .chapter { fill: black; font-weight: 500; font-family: 'Graphik', sans-serif !important; font-size: 115px; }
+        .community { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif !important; font-size: 80px; }
+        .date { fill: black; font-weight: 300; font-family: 'Graphik', sans-serif !important; font-size: 50px; }
       </style>
     </defs>`;
 

@@ -4,28 +4,28 @@ export function getFontFaceStyle(): string {
   return `
     @font-face {
       font-family: 'Graphik';
-      src: url(data:font/woff;base64,${fontData.regular}) format('woff');
+      src: url(data:font/woff2;base64,${fontData.regular}) format('woff2');
       font-weight: 400;
       font-style: normal;
-      font-display: swap;
+      font-display: block;
     }
     @font-face {
       font-family: 'Graphik';
-      src: url(data:font/woff;base64,${fontData.light}) format('woff');
+      src: url(data:font/woff2;base64,${fontData.light}) format('woff2');
       font-weight: 300;
       font-style: normal;
-      font-display: swap;
+      font-display: block;
     }
     @font-face {
       font-family: 'Graphik';
-      src: url(data:font/woff;base64,${fontData.medium}) format('woff');
+      src: url(data:font/woff2;base64,${fontData.medium}) format('woff2');
       font-weight: 500;
       font-style: normal;
-      font-display: swap;
+      font-display: block;
     }
 
-    body {
-      font-family: 'Graphik', sans-serif;
+    * {
+      font-family: 'Graphik', sans-serif !important;
     }
   `;
 }
