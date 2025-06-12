@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Airtable from "airtable";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ const ExecSchema = z.object({
   Region: z.string(),
   "BBYO Internal Hotel Room": z.string(),
   "Marriott Room Number": z.string(),
+  "Room Check - Tuesday": z.boolean().optional(),
   "Room Check - Wednesday": z.boolean().optional(),
   "Room Check - Thursday": z.boolean().optional(),
   "Room Check - Friday": z.boolean().optional(),
@@ -51,14 +52,27 @@ type Exec = z.infer<typeof ExecSchema>;
 
 const CheckInScreen: React.FC = () => {
   const [execs, setExecs] = useState<Record<string, Exec>>({});
-  const [selectedDay, setSelectedDay] = useState<string>("Wednesday");
+  const [selectedDay, setSelectedDay] = useState<string>("Tuesday");
   const [selectedGroup, setSelectedGroup] = useState<string>("All");
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showStats, setShowStats] = useState<boolean>(true);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const days = ["Wednesday", "Thursday", "Friday", "Saturday"];
+  const days = useMemo(() => {
+    return ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  }, []);
   const groups = ["All", "AZA", "BBG"];
+
+  // Intelligently set the selected day to the current day of the week. If it's before 5am, set it to the previous day.
+  useEffect(() => {
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    const now = new Date();
+    if (now.getHours() < 5) {
+      setSelectedDay(days[days.indexOf(today) - 1]);
+    } else {
+      setSelectedDay(today);
+    }
+  }, [days]);
 
   useEffect(() => {
     fetchExecs();
@@ -78,6 +92,7 @@ const CheckInScreen: React.FC = () => {
           "Region",
           "BBYO Internal Hotel Room",
           "Marriott Room Number",
+          "Room Check - Tuesday",
           "Room Check - Wednesday",
           "Room Check - Thursday",
           "Room Check - Friday",
