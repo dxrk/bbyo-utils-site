@@ -427,7 +427,7 @@ const CheckInScreen: React.FC = () => {
                                 {exec["Full Name"]}
                               </span>
                               <span className="text-sm text-muted-foreground">
-                                {exec.Region} - #{exec["Marriott Room Number"]}
+                                {exec.Region}
                               </span>
                             </div>
                             <Button

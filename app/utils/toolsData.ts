@@ -55,7 +55,7 @@ export const toolsData = [
     name: "August Execs Movement Launch Dashboard",
     description: "Display for August Execs movement launch.",
     route: "utils/movement-launch",
-    deprecated: true,
+    deprecated: false,
     type: "tool",
   },
   {

@@ -18,8 +18,8 @@ export async function getSheetData() {
   const glSheets = google.sheets({ version: "v4", auth: glAuth });
 
   const data = await glSheets.spreadsheets.values.get({
-    spreadsheetId: "1L87rbXZyFzgExutgkNRRC5lvlkijKBJToxe8GPtV0K0",
-    range: "FY25 Community Tracking!B3:I3",
+    spreadsheetId: "1HfQPWUxHDnbCvzpnmhO3xy8lDYq0k-OYkO7XbFztZIw",
+    range: "FY26 Community Tracking",
   });
 
   return { data: data.data.values };
